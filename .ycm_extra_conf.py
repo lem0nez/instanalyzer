@@ -39,6 +39,9 @@ flags = [
 '-x', 'c++',
 '-isystem', '/usr/include',
 '-isystem', '/usr/local/include',
+
+'-Ilib/libgit2-0.27.7/include',
+'-Ilib/rapidjson-1.1.0/include',
 ]
 
 
