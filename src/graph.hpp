@@ -15,19 +15,28 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <initializer_list>
+#include <ostream>
 #include <string>
-#include <vector>
 
-#include "curlpp/cURLpp.hpp"
-#include "instanalyzer.hpp"
+#include "term.hpp"
 
-using namespace std;
+class Graph {
+public:
+  struct GraphInfo {
+    std::string label;
+    double percents;
+    bool is_bold_text;
 
-int main(int argc, char* argv[]) {
-  curlpp::initialize();
-  Instanalyzer::init();
+    // Text colors in and out of graph.
+    Term::Color text_col_in;
+    Term::Color text_col_out;
+    Term::Color graph_col;
+  };
 
-  vector<string> params(argv + 1, argv + argc);
-  Instanalyzer::parse_params(params);
-  return 0;
-}
+  // Return -1 on successful, otherwise graph index
+  // which didn't print due to terminal didn't have space (columns) for it.
+  static int draw_graphs(std::ostream&, const std::initializer_list<GraphInfo>&);
+};

@@ -32,7 +32,11 @@
 *.app
 
 # Other
+autom4te.cache/
 build/
 lib/
-.session.vim
+*.log
 *.swp
+.session.vim
+config.status
+Makefile

@@ -23,8 +23,9 @@ import ycm_core
 # CHANGE THIS LIST OF FLAGS. YES, THIS IS THE DROID YOU HAVE BEEN LOOKING FOR.
 flags = [
 '-Wall',
-'-Wextra',
 '-fexceptions',
+'-Wextra',
+'-Wno-psabi',
 # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which
 # language to use when compiling headers. So it will guess. Badly. So C++
 # headers will be compiled as C headers. You don't want that so ALWAYS specify
@@ -37,11 +38,11 @@ flags = [
 # relevant for c++ headers.
 # For a C project, you would set this to 'c' instead of 'c++'.
 '-x', 'c++',
-'-isystem', '/usr/include',
-'-isystem', '/usr/local/include',
 
-'-Ilib/libgit2-0.27.7/include',
-'-Ilib/rapidjson-1.1.0/include',
+'-Ilib/json-3.5.0/include',
+'-Ilib/curlpp-0.8.1/include',
+'-Ilib/libzippp-2.1-1.5.1/include',
+'-Ilib/boost-1.69.0/include',
 ]
 
 
