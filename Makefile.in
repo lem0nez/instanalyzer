@@ -1,5 +1,6 @@
 -include libs.make
 
+VERSION = @VERSION@
 CXX = @echo '  g++    $@' && g++
 WARNINGS = -Wall -fexceptions -Wextra -Wno-psabi
 DEFINES = -std=c++17 -lstdc++fs -ggdb -pthread
@@ -26,7 +27,7 @@ $(BUILD)/instanalyzer: $(OBJECTS)
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(WARNINGS) -c $< -o $@ $(CXXFLAGS) $(DEFINES)
+	$(CXX) -DVERSION=\"$(VERSION)\" $(WARNINGS) -c $< -o $@ $(CXXFLAGS) $(DEFINES)
 
 .PHONY: clean
 clean:

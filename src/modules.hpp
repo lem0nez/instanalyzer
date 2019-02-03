@@ -35,8 +35,15 @@ public:
 
   static void init_interpreter() noexcept(false);
   static void update_modules() noexcept(false);
-  static void instaloader(const std::string& params,
+
+  static void interpreter(const std::string& params,
       const parser_cb cb_out = nullptr, const parser_cb cb_err = nullptr);
+
+  inline static void instaloader(const std::string& t_params,
+      const parser_cb t_cb_out = nullptr, const parser_cb t_cb_err = nullptr) {
+    interpreter(std::string(get_instaloader_path()) + ' ' + t_params,
+        t_cb_out, t_cb_err);
+  }
 
   inline static std::filesystem::path get_modules_path() {
     return Instanalyzer::get_work_path() / "modules";

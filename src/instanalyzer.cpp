@@ -22,6 +22,7 @@
 #include <map>
 
 #include "modules.hpp"
+#include "profiles.hpp"
 #include "term.hpp"
 
 using namespace std;
@@ -51,6 +52,7 @@ void Instanalyzer::init() {
 
   try {
     Modules::init_interpreter();
+    Profiles::init();
   } catch (const exception& e) {
     msg(MSG_ERR, e.what());
     exit(EXIT_FAILURE);
@@ -62,14 +64,14 @@ void Instanalyzer::init() {
     try {
       Modules::update_modules();
     } catch (const exception& e) {
-      msg(MSG_ERR, e.what());
+      msg(MSG_ERR, e.what(), true);
       exit(EXIT_FAILURE);
     }
   }
 }
 
-bool Instanalyzer::request_theme() {
-  if (!get_val("use_dark_theme").empty()) {
+bool Instanalyzer::request_theme(const bool t_force) {
+  if (!t_force && !get_val("use_dark_theme").empty()) {
     try {
       return stoi(get_val("use_dark_theme"));
     } catch (const exception& e) {
@@ -100,16 +102,15 @@ bool Instanalyzer::request_theme() {
   return use_dark_theme;
 }
 
-void Instanalyzer::parse_params(const vector<string>& t_params) {}
-
-void Instanalyzer::msg(const Massages t_msg, const string& str) {
+void Instanalyzer::msg(const Massages t_msg, const string& str,
+    const bool t_new_line) {
   static const map<Massages, string> msg_prefixes = {
     {MSG_INFO, "#{bold}#{blue_out}INFO#{reset} #{bold}|#{reset} "},
-    {MSG_ERR, "\n#{bold}#{red_out}ERROR#{reset} #{bold}|#{reset} "},
+    {MSG_ERR, "#{bold}#{red_out}ERROR#{reset} #{bold}|#{reset} "},
     {MSG_WARN, "#{bold}#{orange_out}WARNING#{reset} #{bold}|#{reset} "}
   };
-  cout << Term::reset() + Term::process_colors(msg_prefixes.at(t_msg)) + str
-      << endl;
+  cout << (t_new_line ? "\n" : "") + Term::reset() +
+      Term::process_colors(msg_prefixes.at(t_msg)) + str << endl;
 }
 
 string Instanalyzer::get_val(const string& t_key) {

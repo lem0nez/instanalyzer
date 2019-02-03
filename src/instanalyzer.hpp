@@ -19,7 +19,6 @@
 
 #include <filesystem>
 #include <string>
-#include <vector>
 
 #include "nlohmann/json.hpp"
 
@@ -32,11 +31,11 @@ public:
   };
 
   static void init();
+  // force - request user choice anyway.
   // Return true if need use dark theme, otherwise false.
-  static bool request_theme();
-  static void parse_params(const std::vector<std::string>&);
+  static bool request_theme(const bool force = false);
 
-  static void msg(const Massages, const std::string&);
+  static void msg(const Massages, const std::string&, const bool new_line = false);
   static std::string get_val(const std::string&);
   static void set_val(const std::string&, const std::string&);
 

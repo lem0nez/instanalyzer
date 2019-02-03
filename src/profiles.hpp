@@ -15,21 +15,39 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <filesystem>
 #include <string>
 #include <vector>
 
-#include "curlpp/cURLpp.hpp"
+#include "boost/regex.hpp"
 
 #include "instanalyzer.hpp"
-#include "params.hpp"
 
-using namespace std;
+class Profiles {
+public:
 
-int main(int argc, char* argv[]) {
-  curlpp::initialize();
-  Instanalyzer::init();
+  static void init() noexcept(false);
+  inline static std::filesystem::path get_profiles_path() {
+    return Instanalyzer::get_work_path() / "profiles";
+  }
 
-  vector<string> params(argv + 1, argv + argc);
-  Params::process_params(params);
-  return 0;
-}
+  static void update(const std::string&);
+  static void remove_unused_files(const std::string&);
+
+private:
+  struct MsgUpd {
+    boost::regex msg_regex;
+    std::string replacement;
+  };
+
+  struct ErrUpd {
+    boost::regex err_regex;
+    std::string replacement;
+    bool is_critical;
+  };
+
+  static const std::vector<MsgUpd> m_msgs_upd;
+  static const std::vector<ErrUpd> m_errs_upd;
+};

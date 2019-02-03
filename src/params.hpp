@@ -15,21 +15,33 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
-#include "curlpp/cURLpp.hpp"
+class Params {
+public:
+  static void process_params(const std::vector<std::string>&);
+  static void show_help();
+  static void show_version();
 
-#include "instanalyzer.hpp"
-#include "params.hpp"
+private:
+  enum Parameters {
+    PARAM_UPDATE_PROFILE,
+    PARAM_UPDATE,
+    PARAM_THEME,
+    PARAM_HELP,
+    PARAM_VERSION
+  };
 
-using namespace std;
+  struct ParamInfo {
+    std::set<std::string> names;
+    std::string info;
+    bool main_param;
+  };
 
-int main(int argc, char* argv[]) {
-  curlpp::initialize();
-  Instanalyzer::init();
-
-  vector<string> params(argv + 1, argv + argc);
-  Params::process_params(params);
-  return 0;
-}
+  static const std::map<Parameters, ParamInfo> m_params;
+};

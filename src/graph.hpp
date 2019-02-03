@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <initializer_list>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "term.hpp"
 
@@ -38,5 +38,5 @@ public:
 
   // Return -1 on successful, otherwise graph index
   // which didn't print due to terminal didn't have space (columns) for it.
-  static int draw_graphs(std::ostream&, const std::initializer_list<GraphInfo>&);
+  static int draw_graphs(std::ostream&, const std::vector<GraphInfo>&);
 };

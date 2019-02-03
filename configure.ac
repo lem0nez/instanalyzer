@@ -1,4 +1,5 @@
 AC_INIT(instanalyzer, 1.0, nikita.dudko.95@gmail.com)
+AC_SUBST(VERSION, 1.0)
 AC_LANG(C++)
 AC_PROG_CXX
 

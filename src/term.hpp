@@ -59,6 +59,10 @@ public:
   static std::string reset();
   static std::string bold();
 
+  inline static std::string clear_line() {
+    return '\r' + std::string(get_columns(), ' ') + '\r' + reset();
+  };
+
 private:
   static const std::set<std::string> m_colored_terms;
   static const std::map<Color, ColorInfo> m_colors;

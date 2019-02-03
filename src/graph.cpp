@@ -22,11 +22,12 @@
 
 using namespace std;
 
-int Graph::draw_graphs(
-    ostream& t_os, const initializer_list<GraphInfo>& t_graphs) {
+int Graph::draw_graphs(ostream& t_os, const vector<GraphInfo>& t_graphs) {
   using namespace boost;
 
-  const unsigned int term_columns = Term::get_columns();
+  static const unsigned short MAX_TERM_COLUMNS = 80;
+  const unsigned int term_columns = (Term::get_columns() > MAX_TERM_COLUMNS) ?
+      MAX_TERM_COLUMNS : Term::get_columns();
   size_t idx = 0;
 
   for (const auto& g : t_graphs) {

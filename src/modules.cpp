@@ -112,7 +112,7 @@ void Modules::update_modules() {
 
   try {
     remove_all(get_modules_path());
-  } catch (const exception& e) {}
+  } catch (const exception&) {}
 
   if (!create_directory(get_modules_path())) {
     throw runtime_error("Parent directory for modules (" +
@@ -126,7 +126,7 @@ void Modules::update_modules() {
 
     try {
       remove(archive_path);
-    } catch (const exception& e) {}
+    } catch (const exception&) {}
 
     ofstream archive(archive_path);
     options::WriteStream ws(&archive);
@@ -140,8 +140,8 @@ void Modules::update_modules() {
     request.perform();
     archive.close();
 
-    cout << '\r' + string(Term::get_columns(), ' ') +
-        Term::process_colors("\r#{bold}Extracting...") << flush;
+    cout << Term::clear_line() + Term::process_colors("#{bold}Extracting...") <<
+        flush;
     ZipArchive za(archive_path);
     za.open();
 
@@ -179,30 +179,34 @@ void Modules::update_modules() {
       }
     }
     remove(archive_path);
-    cout << '\r' + string(Term::get_columns(), ' ') + '\r' + Term::reset()
-        << flush;
+    cout << Term::clear_line() << flush;
   }
   cout << "All done." << endl;
 }
 
-void Modules::instaloader(const string& t_params,
+void Modules::interpreter(const string& t_params,
     const Modules::parser_cb t_cb_out, const Modules::parser_cb t_cb_err) {
   using namespace boost::process;
 
   ipstream out_pstream, err_pstream;
-  const string& exec = string(m_interpreter_path) + ' ' +
-      string(get_instaloader_path()) + ' ' + t_params;
+  const string& exec = string(m_interpreter_path) + ' ' + t_params;
   child c(exec, std_out > out_pstream, std_err > err_pstream);
 
-  string out_line, err_line;
-  while (out_pstream || err_pstream) {
-    if (getline(out_pstream, out_line) && !out_line.empty() &&
-        t_cb_out != nullptr) {
-      t_cb_out(out_line);
+  thread out_reader([&out_pstream,&t_cb_out] {
+    string line;
+    while (getline(out_pstream, line) && t_cb_out != nullptr) {
+      t_cb_out(line);
     }
-    if (getline(err_pstream, err_line) && !err_line.empty() &&
-        t_cb_err != nullptr) {
-      t_cb_err(err_line);
+  });
+
+  thread err_reader([&err_pstream,&t_cb_err] {
+    string line;
+    while (getline(err_pstream, line) && t_cb_err != nullptr) {
+      t_cb_err(line);
     }
-  }
+  });
+
+  c.wait();
+  out_reader.join();
+  err_reader.join();
 }
