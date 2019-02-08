@@ -17,10 +17,12 @@
 
 #include "instanalyzer.hpp"
 
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <map>
 
+#include "location.hpp"
 #include "modules.hpp"
 #include "profiles.hpp"
 #include "term.hpp"
@@ -35,8 +37,14 @@ void Instanalyzer::init() {
   using namespace filesystem;
 
   m_work_path = path(getenv("HOME")) / ".instanalyzer";
-  if (!directory_entry(m_work_path).exists()) {
-    create_directory(m_work_path);
+  try {
+    if (!directory_entry(m_work_path).exists()) {
+      create_directory(m_work_path);
+    }
+  } catch (const exception& e) {
+    msg(MSG_ERR, Term::process_colors("Error occurred while initializing: "
+        "\"#{gray_out}" + string(e.what()) + "#{reset}\"."));
+    exit(EXIT_FAILURE);
   }
 
   ifstream ifs(m_work_path / "config.json");
@@ -50,7 +58,10 @@ void Instanalyzer::init() {
     Term::init(request_theme());
   }
 
+  manage_cache();
+
   try {
+    Location::init();
     Modules::init_interpreter();
     Profiles::init();
   } catch (const exception& e) {
@@ -60,7 +71,7 @@ void Instanalyzer::init() {
 
   if (!directory_entry(Modules::get_instaloader_path()).exists()) {
     msg(MSG_INFO,
-        "Instaloader script doesn't exist, updating of modules required.");
+        "Instaloader script doesn't exist, update of modules required.");
     try {
       Modules::update_modules();
     } catch (const exception& e) {
@@ -70,10 +81,45 @@ void Instanalyzer::init() {
   }
 }
 
-bool Instanalyzer::request_theme(const bool t_force) {
-  if (!t_force && !get_val("use_dark_theme").empty()) {
+void Instanalyzer::manage_cache() {
+  using namespace filesystem;
+
+  if (!directory_entry(get_cache_path()).exists()) {
+    create_directory(get_cache_path());
+    return;
+  }
+
+  constexpr int INTERVAL_DAYS = 30;
+  time_t last_clean = 0;
+
+  try {
+    last_clean = stoi(get_pref("last_cache_clean"));
+  } catch (const exception&) {}
+
+  if (last_clean + INTERVAL_DAYS * 24 * 3600 < time(nullptr)) {
+    cout << "\rCleaning cache..." << flush;
+    error_code e;
+    remove_all(get_cache_path(), e);
+    cout << Term::clear_line() << flush;
+
     try {
-      return stoi(get_val("use_dark_theme"));
+      create_directory(get_cache_path());
+    } catch (const exception& e) {
+      msg(MSG_ERR, Term::process_colors("Can't create cache directory: "
+          "\"#{gray_out}" + string(e.what()) + "#{reset}\"."));
+      exit(EXIT_FAILURE);
+    }
+
+    set_pref("last_cache_clean", to_string(time(nullptr)));
+    msg(MSG_INFO, Term::process_colors("Cache cleaned (interval: #{green_out}" +
+        to_string(INTERVAL_DAYS) + "#{reset} days)."));
+  }
+}
+
+bool Instanalyzer::request_theme(const bool t_force) {
+  if (!t_force && !get_pref("use_dark_theme").empty()) {
+    try {
+      return stoi(get_pref("use_dark_theme"));
     } catch (const exception& e) {
       msg(MSG_ERR, e.what());
       exit(EXIT_FAILURE);
@@ -98,7 +144,7 @@ bool Instanalyzer::request_theme(const bool t_force) {
 
   cout << Term::reset() << flush;
   bool use_dark_theme = item == 1 ? true : false;
-  set_val("use_dark_theme", to_string(use_dark_theme));
+  set_pref("use_dark_theme", to_string(use_dark_theme));
   return use_dark_theme;
 }
 
@@ -113,11 +159,11 @@ void Instanalyzer::msg(const Massages t_msg, const string& str,
       Term::process_colors(msg_prefixes.at(t_msg)) + str << endl;
 }
 
-string Instanalyzer::get_val(const string& t_key) {
+string Instanalyzer::get_pref(const string& t_key) {
   return m_config.value(t_key, "");
 }
 
-void Instanalyzer::set_val(const string& t_key, const string& t_val) {
+void Instanalyzer::set_pref(const string& t_key, const string& t_val) {
   m_config[t_key] = t_val;
   ofstream ofs(get_work_path() / "config.json");
   ofs << m_config.dump(4) << endl;

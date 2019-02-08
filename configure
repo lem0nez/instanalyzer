@@ -590,6 +590,10 @@ TAR
 GZIP
 CURL
 CMAKE
+YANDEX_API_KEY
+HERE_APPCODE
+HERE_APPID
+VERSION
 OBJEXT
 EXEEXT
 ac_ct_CXX
@@ -597,7 +601,6 @@ CPPFLAGS
 LDFLAGS
 CXXFLAGS
 CXX
-VERSION
 target_alias
 host_alias
 build_alias
@@ -1790,8 +1793,6 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-VERSION=1.0
-
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2304,6 +2305,15 @@ ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+
+VERSION=1.0
+
+HERE_APPID=$HERE_APPID
+
+HERE_APPCODE=$HERE_APPCODE
+
+YANDEX_API_KEY=$YANDEX_API_KEY
 
 
 # Extract the first word of "cmake", so it can be a program name with args.

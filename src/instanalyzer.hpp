@@ -36,13 +36,18 @@ public:
   static bool request_theme(const bool force = false);
 
   static void msg(const Massages, const std::string&, const bool new_line = false);
-  static std::string get_val(const std::string&);
-  static void set_val(const std::string&, const std::string&);
+  static std::string get_pref(const std::string&);
+  static void set_pref(const std::string&, const std::string&);
 
   inline static std::filesystem::path get_work_path() { return m_work_path; }
+  inline static std::filesystem::path get_cache_path() {
+      return m_work_path / "cache";
+  };
   inline static std::string get_tmp_prefix() { return "/tmp/instanalyzer_"; }
 
 private:
+  static void manage_cache();
+
   static std::filesystem::path m_work_path;
   static nlohmann::json m_config;
 };

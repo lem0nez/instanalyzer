@@ -17,10 +17,13 @@
 
 #include "params.hpp"
 
+#include <algorithm>
 #include <deque>
 #include <iostream>
 
+#include "data.hpp"
 #include "instanalyzer.hpp"
+#include "location.hpp"
 #include "modules.hpp"
 #include "profiles.hpp"
 #include "term.hpp"
@@ -28,12 +31,16 @@
 using namespace std;
 
 const map<Params::Parameters, Params::ParamInfo> Params::m_params = {
+  {PARAM_PROFILE_LOCATION, {{"-l", "--location"}, "",
+      "Show info of most visited places.", true}},
+  {PARAM_PROFILE_INFO, {{"-i", "--info"}, "", "Show profile info.", true}},
   {PARAM_UPDATE_PROFILE,
-      {{"-u", "--update"}, "Force update local copy of profile.", true}},
-  {PARAM_UPDATE, {{"--update-modules"}, "Force update modules.", false}},
-  {PARAM_THEME, {{"--theme"}, "Change theme.", false}},
-  {PARAM_HELP, {{"-h", "--help"}, "Show help and exit.", false}},
-  {PARAM_VERSION, {{"--version"}, "Show version of tools and exit.", false}}
+      {{"-u", "--update"}, "", "Force update local copy of profile.", true}},
+  {PARAM_GEOCODER, {{"--geocoder", "-g"}, "", "Change geocoder.", false}},
+  {PARAM_THEME, {{"--theme"}, "", "Change theme.", false}},
+  {PARAM_UPDATE, {{"--update-modules"}, "", "Force update modules.", false}},
+  {PARAM_VERSION, {{"--version"}, "", "Show version of tools and exit.", false}},
+  {PARAM_HELP, {{"--help", "-h"}, "", "Show help and exit.", false}}
 };
 
 void Params::process_params(const vector<string>& t_params) {
@@ -50,28 +57,41 @@ void Params::process_params(const vector<string>& t_params) {
     bool is_found = false;
 
     for (const auto& i : m_params) {
-      if (i.second.names.count(*p) == 0) {
+      if (find(i.second.names.cbegin(), i.second.names.cend(), *p) ==
+          i.second.names.cend()) {
         continue;
       } else {
         is_found = true;
       }
 
       switch (i.first) {
+        case PARAM_PROFILE_INFO:
+          request_profile = true;
+          funcs.push_back([&profile] { Data::show_profile_info(profile); });
+          continue;
+        case PARAM_PROFILE_LOCATION:
+          request_profile = true;
+          funcs.push_back([&profile] { Data::show_location_info(profile); });
+          continue;
         case PARAM_UPDATE_PROFILE:
           request_profile = true;
           funcs.push_front([&profile] { Profiles::update(profile); });
           continue;
-        case PARAM_UPDATE:
-          Modules::update_modules();
+        case PARAM_GEOCODER:
+          Location::set_geocoder(Location::request_geocoder());
+          Instanalyzer::set_pref("geocoder", to_string(Location::get_geocoder()));
           continue;
         case PARAM_THEME:
           Term::set_dark_theme(Instanalyzer::request_theme(true));
           continue;
-        case PARAM_HELP:
-          show_help();
-          exit(EXIT_SUCCESS);
+        case PARAM_UPDATE:
+          Modules::update_modules();
+          continue;
         case PARAM_VERSION:
           show_version();
+          exit(EXIT_SUCCESS);
+        case PARAM_HELP:
+          show_help();
           exit(EXIT_SUCCESS);
       }
     }
@@ -104,18 +124,23 @@ void Params::show_help() {
   string main_params = "Main parameters:\n", other_params = "Other parameters:\n";
 
   for (const auto& p : m_params) {
-    auto& params = p.second.main_param ? main_params : other_params;
+    auto& params = p.second.is_main_param ? main_params : other_params;
     params += "  " + Term::bold();
+
     for (auto n = p.second.names.cbegin(); n != p.second.names.cend(); ++n) {
       params += (n == p.second.names.cbegin()) ? *n : (", " + *n);
     }
+    if (!p.second.val.empty()) {
+      params += " <" + p.second.val + '>';
+    }
+
     params += Term::reset() + "    " + p.second.info + '\n';
   }
 
   cout << Term::process_colors(
       "#{gray_out}The #{bold}Instanalyzer#{reset}#{gray_out} tool, based on the "
-      "#{bold}Instaloader#{reset}#{gray_out} script, for\ncollecting and "
-      "structuring information about Instagram profile.#{reset}\n"
+      "#{bold}Instaloader#{reset}#{gray_out} script, for collecting\n"
+      "and structuring information about posts of Instagram profile.#{reset}\n"
       "Usage: #{bold}instanalyzer#{reset} [parameters] {profile}.\n\n") +
       main_params + '\n' + other_params << flush;
 }

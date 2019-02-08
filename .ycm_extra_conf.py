@@ -38,7 +38,10 @@ flags = [
 # For a C project, you would set this to 'c' instead of 'c++'.
 '-x', 'c++',
 
-'-DVERSION="0.0.0"',
+'-DVERSION=""',
+'-DHERE_APPID=""',
+'-DHERE_APPCODE=""',
+'-DYANDEX_API_KEY=""',
 
 '-Ilib/json-3.5.0/include',
 '-Ilib/curlpp-0.8.1/include',

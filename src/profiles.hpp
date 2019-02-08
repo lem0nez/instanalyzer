@@ -27,12 +27,12 @@
 
 class Profiles {
 public:
-
   static void init() noexcept(false);
   inline static std::filesystem::path get_profiles_path() {
     return Instanalyzer::get_work_path() / "profiles";
   }
 
+  static void check(const std::string&);
   static void update(const std::string&);
   static void remove_unused_files(const std::string&);
 

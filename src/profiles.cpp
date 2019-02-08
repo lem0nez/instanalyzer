@@ -50,6 +50,17 @@ void Profiles::init() {
   }
 }
 
+void Profiles::check(const string& t_profile) {
+  using namespace filesystem;
+
+  if (!directory_entry(get_profiles_path() / t_profile / "profile.json")
+      .exists()) {
+    Instanalyzer::msg(Instanalyzer::MSG_INFO,
+        "Local copy of profile didn't find, update required.");
+    update(t_profile);
+  }
+}
+
 void Profiles::update(const string& t_profile) {
   using namespace filesystem;
 
@@ -93,7 +104,7 @@ void Profiles::update(const string& t_profile) {
       cout << Term::clear_line() << flush;
       Instanalyzer::msg(Instanalyzer::MSG_ERR, Term::process_colors(
           "Error occurred while updating profile:\n"
-          " #{red_out}--- --- ---#{gray_out}\n") + str);
+          " #{red_out}--- --- --- ---#{gray_out}\n") + str);
     } else {
       cout << str << endl;
     }
@@ -108,7 +119,7 @@ void Profiles::update(const string& t_profile) {
 
   if (err_started) {
     cout << Term::clear_line() +
-        Term::process_colors(" #{red_out}--- --- ---#{reset}") << endl;
+        Term::process_colors(" #{red_out}--- --- --- ---#{reset}") << endl;
     exit(EXIT_FAILURE);
   } else {
     cout << Term::clear_line() + "All posts updated." << endl;

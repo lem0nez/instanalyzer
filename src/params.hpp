@@ -18,7 +18,6 @@
 #pragma once
 
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -30,17 +29,22 @@ public:
 
 private:
   enum Parameters {
+    PARAM_PROFILE_INFO,
+    PARAM_PROFILE_LOCATION,
     PARAM_UPDATE_PROFILE,
-    PARAM_UPDATE,
+    PARAM_GEOCODER,
     PARAM_THEME,
-    PARAM_HELP,
-    PARAM_VERSION
+    PARAM_UPDATE,
+    PARAM_VERSION,
+    PARAM_HELP
   };
 
   struct ParamInfo {
-    std::set<std::string> names;
+    std::vector<std::string> names;
+    // Additional value for parameter. May be is empty.
+    std::string val;
     std::string info;
-    bool main_param;
+    bool is_main_param;
   };
 
   static const std::map<Parameters, ParamInfo> m_params;

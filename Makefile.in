@@ -1,9 +1,15 @@
 -include libs.make
 
 VERSION = @VERSION@
+HERE_APPID = @HERE_APPID@
+HERE_APPCODE = @HERE_APPCODE@
+YANDEX_API_KEY = @YANDEX_API_KEY@
+
 CXX = @echo '  g++    $@' && g++
+ARGS = -std=c++17 -lstdc++fs -ggdb -pthread
+DEFINES = -DVERSION=\"$(VERSION)\" -DHERE_APPID=\"$(HERE_APPID)\" -DHERE_APPCODE=\"$(HERE_APPCODE)\" \
+	-DYANDEX_API_KEY=\"$(YANDEX_API_KEY)\"
 WARNINGS = -Wall -fexceptions -Wextra -Wno-psabi
-DEFINES = -std=c++17 -lstdc++fs -ggdb -pthread
 
 BUILD = build
 OBJ = $(BUILD)/obj
@@ -23,11 +29,11 @@ OBJECTS = $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SOURCES))
 .DEFAULT: $(BUILD)/instanalyzer
 
 $(BUILD)/instanalyzer: $(OBJECTS)
-	$(CXX) $(WARNINGS) $^ -o $@ $(LDFLAGS) $(LDLIBS) $(DEFINES)
+	$(CXX) $(WARNINGS) $^ -o $@ $(LDFLAGS) $(LDLIBS) $(ARGS)
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) -DVERSION=\"$(VERSION)\" $(WARNINGS) -c $< -o $@ $(CXXFLAGS) $(DEFINES)
+	$(CXX) $(WARNINGS) $(DEFINES) -c $< -o $@ $(CXXFLAGS) $(ARGS)
 
 .PHONY: clean
 clean:

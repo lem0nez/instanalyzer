@@ -17,35 +17,31 @@
 
 #pragma once
 
-#include <ostream>
+#include <set>
 #include <string>
 #include <vector>
 
+#include "nlohmann/json.hpp"
+
+#include "location.hpp"
 #include "term.hpp"
 
-class Graph {
+class Data {
 public:
-  struct Colors {
-    Term::Color graph;
-    // Text colors in and out of graph.
-    Term::Color text_in;
-    Term::Color text_out;
-  };
+  typedef std::string (*val_parser)(const nlohmann::json&);
 
-  struct GraphInfo {
-    std::string label;
-    double percents;
-
-    bool is_bold_text;
-    Colors col;
-  };
-
-  // Return -1 on successful, otherwise graph index
-  // which didn't print due to terminal didn't have space (columns) for it.
-  static int draw_graphs(std::ostream&, const std::vector<GraphInfo>&);
-  static Colors get_random_style();
+  static void show_profile_info(const std::string&);
+  static void show_location_info(const std::string& profile,
+      const unsigned int radius = Location::get_default_radius());
 
 private:
-  static const std::vector<Colors>
-      m_graph_styles, m_graph_dark_styles, m_graph_light_styles;
+  struct LocationGroup {
+    std::string name;
+    std::vector<std::string*> address_tree;
+  };
+
+  static std::set<Location::Coord> get_coords(const std::string& profile,
+      const unsigned int radius = Location::get_default_radius());
+
+  static const std::vector<std::pair<std::string, val_parser>> m_profile_data;
 };

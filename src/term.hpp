@@ -45,7 +45,11 @@ public:
   static void init(const bool is_dark);
   static bool is_colored();
   static unsigned int get_columns();
-  static void set_dark_theme(const bool t_is_dark) { m_is_dark = t_is_dark; };
+
+  inline static void set_dark_theme(const bool t_is_dark) {
+    m_is_dark = t_is_dark;
+  };
+  inline static bool is_dark_theme() { return m_is_dark; }
 
   // Colors have following format: #{col_set}, where:
   // col - color name (one of "m_colors" set);

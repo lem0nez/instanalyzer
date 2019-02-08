@@ -17,10 +17,30 @@
 
 #include "graph.hpp"
 
+#include <random>
+
 #include "boost/format.hpp"
 #include "boost/regex.hpp"
 
 using namespace std;
+
+const vector<Graph::Colors> Graph::m_graph_styles = {
+  {Term::COL_RED, Term::COL_BLACK, Term::COL_RED},
+  {Term::COL_ORANGE, Term::COL_BLACK, Term::COL_ORANGE},
+  {Term::COL_YELLOW, Term::COL_BLACK, Term::COL_YELLOW},
+  {Term::COL_GREEN, Term::COL_BLACK, Term::COL_GREEN},
+  {Term::COL_BLUE, Term::COL_BLACK, Term::COL_BLUE},
+  {Term::COL_GRAY, Term::COL_BLACK, Term::COL_GRAY}
+};
+
+const vector<Graph::Colors> Graph::m_graph_dark_styles = {
+  {Term::COL_WHITE, Term::COL_BLACK, Term::COL_WHITE},
+  {Term::COL_CREAM, Term::COL_BLACK, Term::COL_CREAM}
+};
+
+const vector<Graph::Colors> Graph::m_graph_light_styles = {
+  {Term::COL_BLACK, Term::COL_WHITE, Term::COL_BLACK}
+};
 
 int Graph::draw_graphs(ostream& t_os, const vector<GraphInfo>& t_graphs) {
   using namespace boost;
@@ -44,19 +64,46 @@ int Graph::draw_graphs(ostream& t_os, const vector<GraphInfo>& t_graphs) {
       label = label.substr(0, max_label_len - 3) + "...";
     }
 
-    const string& graph_start = Term::get_color(g.graph_col, true) +
-        Term::get_color(g.text_col_in) + (g.is_bold_text ? Term::bold() : "");
+    const string& graph_start = Term::get_color(g.col.graph, true) +
+        Term::get_color(g.col.text_in) + (g.is_bold_text ? Term::bold() : "");
     const size_t spaces = term_columns - label.length() - percents.length(),
         graph_end_char = term_columns * (g.percents / 100.0) + graph_start.length();
 
     string graph =
         graph_start + label + string(spaces, ' ') + percents + Term::reset();
     graph.insert(graph_end_char, Term::reset() +
-        Term::get_color(g.text_col_out) + (g.is_bold_text ? Term::bold() : ""));
+        Term::get_color(g.col.text_out) + (g.is_bold_text ? Term::bold() : ""));
 
     t_os << graph << endl;
     ++idx;
   }
 
   return -1;
+}
+
+Graph::Colors Graph::get_random_style() {
+  vector<Colors> styles(m_graph_styles);
+
+  if (Term::is_dark_theme()) {
+    styles.insert(styles.cend(),
+        m_graph_dark_styles.cbegin(), m_graph_dark_styles.cend());
+  } else {
+    styles.insert(styles.cend(),
+        m_graph_light_styles.cbegin(), m_graph_light_styles.cend());
+  }
+
+  random_device rd;
+  mt19937 engine(rd());
+  uniform_int_distribution<int> uni(0, styles.size() - 1);
+
+  // For prevent repeat of styles one after another.
+  static size_t previous_idx;
+  size_t idx;
+
+  do {
+    idx = uni(rd);
+  } while (idx == previous_idx);
+  previous_idx = idx;
+
+  return styles[idx];
 }
