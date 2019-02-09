@@ -139,6 +139,8 @@ void Data::show_location_info(
   if (places.empty()) {
     return;
   }
+
+  bool at_least_one_group_printed = false;
   Location::Place place;
 
   const vector<LocationGroup> groups = {
@@ -184,32 +186,39 @@ void Data::show_location_info(
 
     if (group_places.empty()) {
       continue;
-    } else {
-      cout << Term::process_colors("\n#{bold}> " + g.name) << flush;
-      const size_t unknown = places.size() - places_count;
-
-      if (unknown > 0) {
-        cout << Term::process_colors(
-            " #{gray_out}(" + to_string(unknown) + " unknown)") << flush;
-      }
-      cout << Term::reset() << endl;
-
-      Graph::Colors colors = Graph::get_random_style();
-      const auto& cmp = [] (const pair<string, unsigned int>& lhs,
-          const pair<string, unsigned int>& rhs) {
-        return lhs.second > rhs.second;
-      };
-      vector<pair<string, unsigned int>>
-          places_sorted(group_places.cbegin(), group_places.cend());
-      sort(places_sorted.begin(), places_sorted.end(), cmp);
-
-      vector<Graph::GraphInfo> graphs;
-      for (const auto& p : places_sorted) {
-        graphs.push_back( {p.first, (static_cast<double>(p.second) /
-            static_cast<double>(places_count)) * 100.0, false, colors});
-      }
-      Graph::draw_graphs(cout, graphs);
     }
+
+    cout << Term::process_colors("\n#{bold}> " + g.name) << flush;
+    const size_t unknown = places.size() - places_count;
+
+    if (unknown > 0) {
+      cout << Term::process_colors(
+          " #{gray_out}(" + to_string(unknown) + " unknown)") << flush;
+    }
+    cout << Term::reset() << endl;
+
+    Graph::Colors colors = Graph::get_random_style();
+    const auto& cmp = [] (const pair<string, unsigned int>& lhs,
+        const pair<string, unsigned int>& rhs) {
+      return lhs.second > rhs.second;
+    };
+    vector<pair<string, unsigned int>>
+        places_sorted(group_places.cbegin(), group_places.cend());
+    sort(places_sorted.begin(), places_sorted.end(), cmp);
+
+    vector<Graph::GraphInfo> graphs;
+    for (const auto& p : places_sorted) {
+      graphs.push_back( {p.first, (static_cast<double>(p.second) /
+          static_cast<double>(places_count)) * 100.0, false, colors});
+    }
+
+    Graph::draw_graphs(cout, graphs);
+    at_least_one_group_printed = true;
+  }
+
+  if (at_least_one_group_printed) {
+    cout << endl;
+    Instanalyzer::msg(Instanalyzer::MSG_INFO, "All location groups printed.");
   }
 }
 
@@ -270,6 +279,9 @@ set<Location::Coord> Data::get_coords(
         "#{reset} posts and #{yellow_out}" + to_string(geotags) +
         "#{reset} of #{yellow_out}" + to_string(pictures) +
         "#{reset} pictures have location info.") << endl;
+
+    cout << Term::process_colors("Common places count: #{yellow_out}" +
+        to_string(coords.size()) + "#{reset}.") << endl;
   }
   return coords;
 }

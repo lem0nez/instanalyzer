@@ -22,6 +22,8 @@
 #include <functional>
 #include <iostream>
 
+#include <unac.h>
+
 #include "curlpp/Easy.hpp"
 #include "curlpp/Infos.hpp"
 #include "curlpp/Options.hpp"
@@ -181,12 +183,12 @@ set<Location::Place> Location::getter_here(
 
 set<Location::Place> Location::getter_here_process(const json& t_json) {
   cout << "\rProcessing response..." << flush;
-  const string& no_places_msg = "Common places didn't find!";
+  const string& NO_PLACES_MSG = "No places found!";
 
   if (t_json.find("response") == t_json.end() ||
       t_json["response"].find("item") == t_json["response"].end()) {
     cout << Term::clear_line() << flush;
-    Instanalyzer::msg(Instanalyzer::MSG_WARN, no_places_msg);
+    Instanalyzer::msg(Instanalyzer::MSG_WARN, NO_PLACES_MSG);
     return {};
   }
 
@@ -254,9 +256,9 @@ set<Location::Place> Location::getter_here_process(const json& t_json) {
 
   cout << Term::clear_line() << flush;
   if (places.empty()) {
-    Instanalyzer::msg(Instanalyzer::MSG_WARN, no_places_msg);
+    Instanalyzer::msg(Instanalyzer::MSG_WARN, NO_PLACES_MSG);
   } else {
-    Instanalyzer::msg(Instanalyzer::MSG_INFO, "Common places processed.");
+    cout << "Reverse geocoding finished" << endl;
   }
   return places;
 }
@@ -266,7 +268,7 @@ set<Location::Place> Location::getter_yandex(
   using namespace filesystem;
 
   cout << Term::process_colors("For retrieving places info used geocoder by "
-      "#{red_out}© YANDEX, LLC#{reset}.") << endl;
+      "#{red_out}\u00a9 YANDEX, LLC#{reset}.") << endl;
 
   const path& cache_path = Instanalyzer::get_cache_path() / "geocoder-yandex";
   if (!directory_entry(cache_path).exists()) {
@@ -381,7 +383,11 @@ set<Location::Place> Location::getter_yandex(
   }
 
   cout << Term::clear_line() << flush;
-  Instanalyzer::msg(Instanalyzer::MSG_INFO, "Reverse geocoding finished.");
+  if (places.empty()) {
+    Instanalyzer::msg(Instanalyzer::MSG_WARN, "No places found!");
+  } else {
+    cout << "Reverse geocoding finished." << endl;
+  }
   return places;
 }
 
@@ -435,9 +441,23 @@ json Location::getter_yandex_download(const double t_lat, const double t_lon) {
     exit(EXIT_FAILURE);
   }
 
+  char* json_processed = nullptr;
+  size_t processed_len = 0;
+  // Remove accented characters which may contains in addresses.
+  int err_code = unac_string("UTF-8", ss_json.str().c_str(),
+      ss_json.str().length(), &json_processed, &processed_len);
+
+  if (err_code) {
+    cout << Term::clear_line() << flush;
+    Instanalyzer::msg(Instanalyzer::MSG_ERR,
+        "Can't remove accented characters from JSON (error code: #{red_out}" +
+        to_string(err_code) + "#{reset}).");
+    exit(EXIT_FAILURE);
+  }
+
   json json_data;
   try {
-    json_data = json::parse(ss_json);
+    json_data = json::parse(json_processed);
   } catch (const exception& e) {
     cout << Term::clear_line() << flush;
     Instanalyzer::msg(Instanalyzer::MSG_ERR, Term::process_colors(

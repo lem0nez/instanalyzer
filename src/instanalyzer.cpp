@@ -86,6 +86,7 @@ void Instanalyzer::manage_cache() {
 
   if (!directory_entry(get_cache_path()).exists()) {
     create_directory(get_cache_path());
+    set_pref("last_cache_clean", to_string(time(nullptr)));
     return;
   }
 

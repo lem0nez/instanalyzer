@@ -17,6 +17,7 @@ AC_CHECK_PROG(TAR, tar, yes, no)
 test "$TAR" == "no" && AC_MSG_ERROR([Program "tar" didn't find!])
 
 AC_CHECK_LIB(curl, main, [], [AC_MSG_ERROR([Library "curl" didn't find (libcurl4-openssl-dev)!])])
+AC_CHECK_LIB(unac, main, [], [AC_MSG_ERROR([Library "unac" didn't find (libunac1-dev)!])])
 AC_CHECK_LIB(z, main, [], [AC_MSG_ERROR([Library "zlib" didn't find (zlib1g-dev)!])])
 AC_CHECK_LIB(zip, main, [], [AC_MSG_ERROR([Library "zip" didn't find (libzip-dev)!])])
 

@@ -8,7 +8,7 @@ BOOST_LIBS = regex
 LDFLAGS = -L$(LIB)/$(CURLPP)/lib \
 	-L$(LIB)/$(LIBZIPPP)/lib \
 	-L$(LIB)/$(BOOST)/lib
-LDLIBS = -lcurl -lcurlpp -lzippp -lzip -lz -lboost_regex
+LDLIBS = -lcurl -lcurlpp -lzippp -lzip -lz -lunac -lboost_regex
 
 CXXFLAGS = -I$(LIB)/$(JSON)/include \
 	-I$(LIB)/$(CURLPP)/include \

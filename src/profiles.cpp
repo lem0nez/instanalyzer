@@ -126,7 +126,7 @@ void Profiles::update(const string& t_profile) {
   }
 
   remove_unused_files(t_profile);
-  Instanalyzer::msg(Instanalyzer::MSG_INFO, "Updating finished.");
+  Instanalyzer::msg(Instanalyzer::MSG_INFO, "Update finished.");
 }
 
 void Profiles::remove_unused_files(const string& t_profile) {

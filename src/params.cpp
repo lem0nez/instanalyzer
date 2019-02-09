@@ -36,11 +36,12 @@ const map<Params::Parameters, Params::ParamInfo> Params::m_params = {
   {PARAM_PROFILE_INFO, {{"-i", "--info"}, "", "Show profile info.", true}},
   {PARAM_UPDATE_PROFILE,
       {{"-u", "--update"}, "", "Force update local copy of profile.", true}},
-  {PARAM_GEOCODER, {{"--geocoder", "-g"}, "", "Change geocoder.", false}},
-  {PARAM_THEME, {{"--theme"}, "", "Change theme.", false}},
-  {PARAM_UPDATE, {{"--update-modules"}, "", "Force update modules.", false}},
-  {PARAM_VERSION, {{"--version"}, "", "Show version of tools and exit.", false}},
-  {PARAM_HELP, {{"--help", "-h"}, "", "Show help and exit.", false}}
+  {PARAM_GEOCODER, {{"-g", "--geocoder"}, "", "Change geocoder.", false}},
+  {PARAM_THEME, {{"-t", "--theme"}, "", "Change theme.", false}},
+  {PARAM_UPDATE, {{"-m", "--update-modules"}, "", "Force update modules.", false}},
+  {PARAM_VERSION, {{"-v", "--version"}, "",
+      "Show version of tools and exit.", false}},
+  {PARAM_HELP, {{"-h", "--help"}, "", "Show help and exit.", false}}
 };
 
 void Params::process_params(const vector<string>& t_params) {
