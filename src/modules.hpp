@@ -48,7 +48,6 @@ public:
   inline static std::filesystem::path get_modules_path() {
     return Instanalyzer::get_work_path() / "modules";
   }
-
   inline static std::filesystem::path get_instaloader_path() {
     return get_modules_path() / "instaloader.py";
   }

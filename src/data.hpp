@@ -32,7 +32,7 @@ public:
 
   static void show_profile_info(const std::string&);
   static void show_location_info(const std::string& profile,
-      const unsigned int radius = Location::get_default_radius());
+      const unsigned int& radius = Location::get_default_radius());
 
 private:
   struct LocationGroup {
@@ -41,7 +41,7 @@ private:
   };
 
   static std::set<Location::Coord> get_coords(const std::string& profile,
-      const unsigned int radius = Location::get_default_radius());
+      const unsigned int& radius = Location::get_default_radius());
 
   static const std::vector<std::pair<std::string, val_parser>> m_profile_data;
 };

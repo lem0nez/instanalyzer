@@ -32,20 +32,29 @@ public:
     Term::Color text_out;
   };
 
-  struct GraphInfo {
-    std::string label;
-    double percents;
+  Graph() = default;
 
-    bool is_bold_text;
-    Colors col;
-  };
+  inline std::string get_label() const { return m_label; }
+  inline double get_percents() const { return m_percents; }
+  inline Colors get_colors() const { return m_col; }
+  inline bool is_bold_text() const { return m_is_bold_text; }
+
+  inline void set_label(const std::string& t_label) { m_label = t_label; }
+  inline void set_percents(const double& t_percents) { m_percents = t_percents; }
+  inline void set_colors(const Colors& t_col) { m_col = t_col; }
+  inline void set_bold_text(const bool& t_is_bold) { m_is_bold_text = t_is_bold; }
 
   // Return -1 on successful, otherwise graph index
   // which didn't print due to terminal didn't have space (columns) for it.
-  static int draw_graphs(std::ostream&, const std::vector<GraphInfo>&);
+  static int draw_graphs(std::ostream&, const std::vector<Graph>&);
   static Colors get_random_style();
 
 private:
+  std::string m_label;
+  double m_percents;
+  Colors m_col;
+  bool m_is_bold_text;
+
   static const std::vector<Colors>
       m_graph_styles, m_graph_dark_styles, m_graph_light_styles;
 };

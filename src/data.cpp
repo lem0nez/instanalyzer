@@ -25,7 +25,8 @@
 
 #include "graph.hpp"
 #include "instanalyzer.hpp"
-#include "profiles.hpp"
+#include "profile.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace nlohmann;
@@ -100,9 +101,9 @@ const vector<pair<string, Data::val_parser>> Data::m_profile_data = {
 };
 
 void Data::show_profile_info(const string& t_profile) {
-  Profiles::check(t_profile);
+  Profile(t_profile).check();
 
-  ifstream ifs(Profiles::get_profiles_path() / t_profile / "profile.json");
+  ifstream ifs(Profile::get_profiles_path() / t_profile / "profile.json");
   if (ifs.fail()) {
     Instanalyzer::msg(Instanalyzer::MSG_ERR,
         "File with profile info didn't open!");
@@ -131,8 +132,8 @@ void Data::show_profile_info(const string& t_profile) {
 }
 
 void Data::show_location_info(
-    const string& t_profile, const unsigned int t_radius) {
-  Profiles::check(t_profile);
+    const string& t_profile, const unsigned int& t_radius) {
+  Profile(t_profile).check();
 
   const set<Location::Place> places =
       Location::get_common_places(get_coords(t_profile, t_radius));
@@ -206,10 +207,16 @@ void Data::show_location_info(
         places_sorted(group_places.cbegin(), group_places.cend());
     sort(places_sorted.begin(), places_sorted.end(), cmp);
 
-    vector<Graph::GraphInfo> graphs;
+    vector<Graph> graphs;
     for (const auto& p : places_sorted) {
-      graphs.push_back( {p.first, (static_cast<double>(p.second) /
-          static_cast<double>(places_count)) * 100.0, false, colors});
+      Graph graph;
+      graph.set_label(p.first);
+      graph.set_percents((static_cast<double>(p.second) /
+          static_cast<double>(places_count)) * 100.0);
+      graph.set_colors(colors);
+      graph.set_bold_text(false);
+
+      graphs.push_back(graph);
     }
 
     Graph::draw_graphs(cout, graphs);
@@ -223,7 +230,7 @@ void Data::show_location_info(
 }
 
 set<Location::Coord> Data::get_coords(
-    const string& t_profile, const unsigned int t_radius) {
+    const string& t_profile, const unsigned int& t_radius) {
   using namespace filesystem;
 
   cout << "\rProcessing posts..." << flush;
@@ -233,7 +240,7 @@ set<Location::Coord> Data::get_coords(
   };
 
   set<Location::Coord> coords;
-  const path& profile_path = Profiles::get_profiles_path() / t_profile;
+  const path& profile_path = Profile::get_profiles_path() / t_profile;
   unsigned int posts = 0, pictures = 0, geotags = 0;
 
   for (const auto& p : directory_iterator(profile_path)) {
@@ -253,8 +260,7 @@ set<Location::Coord> Data::get_coords(
       continue;
     }
 
-    if (json_data.find("node") == json_data.end() ||
-        json_data["node"].find("location") == json_data["node"].end()) {
+    if (!Utils::has_json_node(json_data, {"node", "location"})) {
       continue;
     }
 

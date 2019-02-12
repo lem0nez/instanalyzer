@@ -25,7 +25,7 @@
 #include "instanalyzer.hpp"
 #include "location.hpp"
 #include "modules.hpp"
-#include "profiles.hpp"
+#include "profile.hpp"
 #include "term.hpp"
 
 using namespace std;
@@ -76,7 +76,7 @@ void Params::process_params(const vector<string>& t_params) {
           continue;
         case PARAM_UPDATE_PROFILE:
           request_profile = true;
-          funcs.push_front([&profile] { Profiles::update(profile); });
+          funcs.push_front([&profile] { Profile(profile).update(); });
           continue;
         case PARAM_GEOCODER:
           Location::set_geocoder(Location::request_geocoder());

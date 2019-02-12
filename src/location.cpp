@@ -30,6 +30,7 @@
 
 #include "instanalyzer.hpp"
 #include "term.hpp"
+#include "utils.hpp"
 
 using namespace std;
 using namespace nlohmann;
@@ -185,8 +186,7 @@ set<Location::Place> Location::getter_here_process(const json& t_json) {
   cout << "\rProcessing response..." << flush;
   const string& NO_PLACES_MSG = "No places found!";
 
-  if (t_json.find("response") == t_json.end() ||
-      t_json["response"].find("item") == t_json["response"].end()) {
+  if (!Utils::has_json_node(t_json, {"response", "item"})) {
     cout << Term::clear_line() << flush;
     Instanalyzer::msg(Instanalyzer::MSG_WARN, NO_PLACES_MSG);
     return {};
@@ -293,18 +293,6 @@ set<Location::Place> Location::getter_yandex(
     "GeoObject", "metaDataProperty", "GeocoderMetaData", "Address", "Components"
   };
 
-  const auto has_node =
-      [] (json t_json, const vector<string>& t_node) -> bool {
-    for (const auto& n : t_node) {
-      if (t_json.find(n) != t_json.end()) {
-        t_json = t_json[n];
-      } else {
-        return false;
-      }
-    }
-    return true;
-  };
-
   const vector<PlaceJsonStrVal> json_place_adresses = {
     {ACCUR_COUNTRY, "country", place.country},
     {ACCUR_STATE, "province", place.state},
@@ -349,19 +337,19 @@ set<Location::Place> Location::getter_yandex(
       }
     }
 
-    if (!has_node(json_data, places_node)) {
+    if (!Utils::has_json_node(json_data, places_node)) {
       continue;
     }
     for (const auto& p :
         json_data["response"]["GeoObjectCollection"]["featureMember"]) {
-      if (!has_node(p, pos_node)) {
+      if (!Utils::has_json_node(p, pos_node)) {
         continue;
       }
 
       string pos = p["GeoObject"]["Point"]["pos"];
       place.id = to_string(hash<string>{}(pos.replace(pos.find(' '), 1, "-")));
 
-      if (has_node(p, address_node)) {
+      if (Utils::has_json_node(p, address_node)) {
         for (const auto& a : p["GeoObject"]["metaDataProperty"]
             ["GeocoderMetaData"]["Address"]["Components"]) {
           if (a.find("kind") == a.end() || a.find("name") == a.end()) {
@@ -391,7 +379,7 @@ set<Location::Place> Location::getter_yandex(
   return places;
 }
 
-json Location::getter_yandex_download(const double t_lat, const double t_lon) {
+json Location::getter_yandex_download(const double& t_lat, const double& t_lon) {
   using namespace curlpp;
 
   Easy request;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "profiles.hpp"
+#include "profile.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -27,13 +27,13 @@
 
 using namespace std;
 
-const vector<Profiles::MsgUpd> Profiles::m_msgs_upd = {
+const vector<Profile::MsgUpd> Profile::m_msgs_upd = {
   {boost::regex("^\\s*\\[\\s*([^\\s\\/]+)\\s*\\/\\s*([^]\\s]+)\\s*].*$",
       boost::regex::extended), Term::clear_line() +
       "Downloaded #{blue_out}$1#{reset} of #{blue_out}$2#{reset} posts..."}
 };
 
-const vector<Profiles::ErrUpd> Profiles::m_errs_upd = {
+const vector<Profile::ErrUpd> Profile::m_errs_upd = {
   {boost::regex("^.+ ([^\\s]+) does not exist\\.$", boost::regex::extended),
       "Profile #{red_out}@$1#{reset} doesn't exist!", true},
   {boost::regex(".+ Max retries exceeded with url:.+\\[retrying; skip with \\^C]$",
@@ -42,7 +42,7 @@ const vector<Profiles::ErrUpd> Profiles::m_errs_upd = {
       "Profile #{red_out}@$1#{reset} is private!", true}
 };
 
-void Profiles::init() {
+void Profile::init() {
   using namespace filesystem;
 
   if (!directory_entry(get_profiles_path()).exists()) {
@@ -50,25 +50,25 @@ void Profiles::init() {
   }
 }
 
-void Profiles::check(const string& t_profile) {
+void Profile::check() const {
   using namespace filesystem;
 
-  if (!directory_entry(get_profiles_path() / t_profile / "profile.json")
+  if (!directory_entry(get_profiles_path() / m_name / "profile.json")
       .exists()) {
     Instanalyzer::msg(Instanalyzer::MSG_INFO,
         "Local copy of profile didn't find, update required.");
-    update(t_profile);
+    update();
   }
 }
 
-void Profiles::update(const string& t_profile) {
+void Profile::update() const {
   using namespace filesystem;
 
   cout << Term::process_colors(
-      "Updating profile #{blue_out}@" + t_profile + "#{reset}...") << endl;
+      "Updating profile #{blue_out}@" + m_name + "#{reset}...") << endl;
 
   try {
-    remove_all(get_profiles_path() / t_profile);
+    remove_all(get_profiles_path() / m_name);
   } catch (const exception&) {}
 
   const auto& fout = [] (const string& str) {
@@ -115,7 +115,7 @@ void Profiles::update(const string& t_profile) {
       "-V -C -G --no-pictures --no-profile-pic --no-captions --no-compress-json "
       "--max-connection-attempts=" + to_string(MAX_CONNECTION_ATTEMPTS) +
       " --filename-pattern={shortcode} --dirname-pattern=" +
-      string(get_profiles_path()) + "/{target} " + t_profile, fout, ferr);
+      string(get_profiles_path()) + "/{target} " + m_name, fout, ferr);
 
   if (err_started) {
     cout << Term::clear_line() +
@@ -125,15 +125,15 @@ void Profiles::update(const string& t_profile) {
     cout << Term::clear_line() + "All posts updated." << endl;
   }
 
-  remove_unused_files(t_profile);
+  remove_unused_files();
   Instanalyzer::msg(Instanalyzer::MSG_INFO, "Update finished.");
 }
 
-void Profiles::remove_unused_files(const string& t_profile) {
+void Profile::remove_unused_files() const {
   using namespace filesystem;
   cout << "\rRemoving unused files..." << flush;
 
-  const path& profile_path = get_profiles_path() / t_profile;
+  const path& profile_path = get_profiles_path() / m_name;
   const set<string> unused_postfixes = {"_comments.json", "_location.txt"};
 
   for (const auto& f : directory_iterator(profile_path)) {
@@ -163,7 +163,7 @@ void Profiles::remove_unused_files(const string& t_profile) {
   ifs.close();
 
   try {
-    rename(string(profile_path / t_profile) + '_' + id + ".json",
+    rename(string(profile_path / m_name) + '_' + id + ".json",
         profile_path / "profile.json");
   } catch (const exception& e) {
     cout << Term::clear_line() << flush;

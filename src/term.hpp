@@ -42,11 +42,11 @@ public:
     unsigned int code_light;
   };
 
-  static void init(const bool is_dark);
+  static void init(const bool& is_dark);
   static bool is_colored();
   static unsigned int get_columns();
 
-  inline static void set_dark_theme(const bool t_is_dark) {
+  inline static void set_dark_theme(const bool& t_is_dark) {
     m_is_dark = t_is_dark;
   };
   inline static bool is_dark_theme() { return m_is_dark; }
@@ -59,7 +59,7 @@ public:
   // #{bold} - set text to bold;
   // #{reset} - reset all colors and font style.
   static std::string process_colors(std::string);
-  static std::string get_color(const Color, const bool is_fill = false);
+  static std::string get_color(const Color&, const bool& is_fill = false);
   static std::string reset();
   static std::string bold();
 

@@ -17,37 +17,12 @@
 
 #pragma once
 
-#include <filesystem>
 #include <string>
 #include <vector>
 
-#include "boost/regex.hpp"
+#include "nlohmann/json.hpp"
 
-#include "instanalyzer.hpp"
-
-class Profiles {
+class Utils {
 public:
-  static void init() noexcept(false);
-  inline static std::filesystem::path get_profiles_path() {
-    return Instanalyzer::get_work_path() / "profiles";
-  }
-
-  static void check(const std::string&);
-  static void update(const std::string&);
-  static void remove_unused_files(const std::string&);
-
-private:
-  struct MsgUpd {
-    boost::regex msg_regex;
-    std::string replacement;
-  };
-
-  struct ErrUpd {
-    boost::regex err_regex;
-    std::string replacement;
-    bool is_critical;
-  };
-
-  static const std::vector<MsgUpd> m_msgs_upd;
-  static const std::vector<ErrUpd> m_errs_upd;
+  static bool has_json_node(nlohmann::json, const std::vector<std::string>&);
 };

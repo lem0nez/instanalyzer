@@ -31,19 +31,20 @@ public:
   };
 
   static void init();
-  // force - request user choice anyway.
-  // Return true if need use dark theme, otherwise false.
-  static bool request_theme(const bool force = false);
-
-  static void msg(const Massages, const std::string&, const bool new_line = false);
-  static std::string get_pref(const std::string&);
-  static void set_pref(const std::string&, const std::string&);
 
   inline static std::filesystem::path get_work_path() { return m_work_path; }
   inline static std::filesystem::path get_cache_path() {
       return m_work_path / "cache";
   };
-  inline static std::string get_tmp_prefix() { return "/tmp/instanalyzer_"; }
+  static std::string get_tmp_prefix();
+
+  // force - request user choice anyway.
+  // Return true if need use dark theme, otherwise false.
+  static bool request_theme(const bool& force = false);
+  static void msg(
+      const Massages&, const std::string&, const bool& new_line = false);
+  static std::string get_pref(const std::string&);
+  static void set_pref(const std::string&, const std::string&);
 
 private:
   static void manage_cache();

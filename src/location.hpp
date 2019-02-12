@@ -58,7 +58,7 @@ public:
   };
 
   inline static Geocoder get_geocoder() { return m_geocoder; }
-  inline static void set_geocoder(const Geocoder t_geocoder) {
+  inline static void set_geocoder(const Geocoder& t_geocoder) {
     m_geocoder = t_geocoder;
   };
 
@@ -87,7 +87,8 @@ private:
   static std::set<Place> getter_here_process(const nlohmann::json&);
 
   static std::set<Place> getter_yandex(const std::set<Coord>&);
-  static nlohmann::json getter_yandex_download(const double lat, const double lon);
+  static nlohmann::json getter_yandex_download(
+      const double& lat, const double& lon);
 
   static const std::map<Geocoder, GeocoderInfo> m_geocoders;
   static Geocoder m_geocoder;

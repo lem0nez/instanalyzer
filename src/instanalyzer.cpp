@@ -24,7 +24,7 @@
 
 #include "location.hpp"
 #include "modules.hpp"
-#include "profiles.hpp"
+#include "profile.hpp"
 #include "term.hpp"
 
 using namespace std;
@@ -36,7 +36,12 @@ json Instanalyzer::m_config;
 void Instanalyzer::init() {
   using namespace filesystem;
 
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+  m_work_path = path(getenv("APPDATA")) / "Instanalyzer";
+#else
   m_work_path = path(getenv("HOME")) / ".instanalyzer";
+#endif
+
   try {
     if (!directory_entry(m_work_path).exists()) {
       create_directory(m_work_path);
@@ -63,7 +68,7 @@ void Instanalyzer::init() {
   try {
     Location::init();
     Modules::init_interpreter();
-    Profiles::init();
+    Profile::init();
   } catch (const exception& e) {
     msg(MSG_ERR, e.what());
     exit(EXIT_FAILURE);
@@ -79,6 +84,14 @@ void Instanalyzer::init() {
       exit(EXIT_FAILURE);
     }
   }
+}
+
+string Instanalyzer::get_tmp_prefix() {
+#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+  return filesystem::path(getenv("TEMP")) / "instanalyzer_";
+#else
+  return "/tmp/instanalyzer_";
+#endif
 }
 
 void Instanalyzer::manage_cache() {
@@ -117,7 +130,7 @@ void Instanalyzer::manage_cache() {
   }
 }
 
-bool Instanalyzer::request_theme(const bool t_force) {
+bool Instanalyzer::request_theme(const bool& t_force) {
   if (!t_force && !get_pref("use_dark_theme").empty()) {
     try {
       return stoi(get_pref("use_dark_theme"));
@@ -149,8 +162,8 @@ bool Instanalyzer::request_theme(const bool t_force) {
   return use_dark_theme;
 }
 
-void Instanalyzer::msg(const Massages t_msg, const string& str,
-    const bool t_new_line) {
+void Instanalyzer::msg(const Massages& t_msg, const string& str,
+    const bool& t_new_line) {
   static const map<Massages, string> msg_prefixes = {
     {MSG_INFO, "#{bold}#{blue_out}INFO#{reset} #{bold}|#{reset} "},
     {MSG_ERR, "#{bold}#{red_out}ERROR#{reset} #{bold}|#{reset} "},
