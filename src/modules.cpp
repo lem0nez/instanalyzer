@@ -19,7 +19,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <set>
 #include <stdexcept>
 
 #include "boost/process.hpp"
@@ -73,17 +72,36 @@ filesystem::path Modules::m_interpreter_path;
 void Modules::init_interpreter() {
   using namespace boost::process;
 
-  const set<filesystem::path> bin_paths = {
-    "/bin", "/usr/bin", "/usr/local/bin", "/sbin", "/opt"
-  };
-  const set<string> bin_names = {
+  const vector<string> names = {
     "python3.7", "python3.7m", "python3.6", "python3.6m",
     "python3.5", "python3.5m", "python3", "python3m"
   };
+  const vector<string> path_variables = {
+    "PATH"
+  };
   const boost::regex python_ver("^Python 3\\.[5-9]\\.[0-9]+$");
 
-  for (const auto& p : bin_paths) {
-    for (const auto& n : bin_names) {
+  vector<filesystem::path> paths = {
+    "/bin", "/usr/bin", "/usr/local/bin", "/sbin", "/opt"
+  };
+
+  for (const auto& v : path_variables) {
+    const char* val = getenv(v.c_str());
+
+    if (val == nullptr) {
+      continue;
+    } else {
+      istringstream ss(val);
+      string path;
+
+      while (getline(ss, path, ':')) {
+        paths.push_back(path);
+      }
+    }
+  }
+
+  for (const auto& p : paths) {
+    for (const auto& n : names) {
       if (filesystem::directory_entry(p / n).exists()) {
         ipstream pstream;
         child c((p / n).c_str() + string(" --version"), std_out > pstream);

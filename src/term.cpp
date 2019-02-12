@@ -48,14 +48,9 @@ void Term::init(const bool& t_is_dark) {
 }
 
 bool Term::is_colored() {
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-  // As default Windows terminal support ESC color codes.
-  return true;
-#else
   const string env = getenv("TERM");
   return any_of(m_colored_terms.cbegin(), m_colored_terms.cend(),
       [&] (const string& term) { return env.find(term) != string::npos; });
-#endif
 }
 
 unsigned int Term::get_columns() {

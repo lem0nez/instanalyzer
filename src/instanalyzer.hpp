@@ -36,7 +36,7 @@ public:
   inline static std::filesystem::path get_cache_path() {
       return m_work_path / "cache";
   };
-  static std::string get_tmp_prefix();
+  inline static std::string get_tmp_prefix() { return "/tmp/instanalyzer_"; }
 
   // force - request user choice anyway.
   // Return true if need use dark theme, otherwise false.

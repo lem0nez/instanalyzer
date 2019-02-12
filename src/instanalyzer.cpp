@@ -36,12 +36,7 @@ json Instanalyzer::m_config;
 void Instanalyzer::init() {
   using namespace filesystem;
 
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-  m_work_path = path(getenv("APPDATA")) / "Instanalyzer";
-#else
   m_work_path = path(getenv("HOME")) / ".instanalyzer";
-#endif
-
   try {
     if (!directory_entry(m_work_path).exists()) {
       create_directory(m_work_path);
@@ -84,14 +79,6 @@ void Instanalyzer::init() {
       exit(EXIT_FAILURE);
     }
   }
-}
-
-string Instanalyzer::get_tmp_prefix() {
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
-  return filesystem::path(getenv("TEMP")) / "instanalyzer_";
-#else
-  return "/tmp/instanalyzer_";
-#endif
 }
 
 void Instanalyzer::manage_cache() {
