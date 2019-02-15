@@ -20,12 +20,13 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
 #include "graph.hpp"
 #include "instanalyzer.hpp"
-#include "profile.hpp"
+#include "post.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -100,10 +101,11 @@ const vector<pair<string, Data::val_parser>> Data::m_profile_data = {
   }}
 };
 
-void Data::show_profile_info(const string& t_profile) {
-  Profile(t_profile).check();
+void Data::show_profile_info(const Profile& t_profile) {
+  t_profile.check();
 
-  ifstream ifs(Profile::get_profiles_path() / t_profile / "profile.json");
+  ifstream ifs(
+      Profile::get_profiles_path() / t_profile.get_name() / "profile.json");
   if (ifs.fail()) {
     Instanalyzer::msg(Instanalyzer::MSG_ERR,
         "File with profile info didn't open!");
@@ -132,11 +134,11 @@ void Data::show_profile_info(const string& t_profile) {
 }
 
 void Data::show_location_info(
-    const string& t_profile, const unsigned int& t_radius) {
-  Profile(t_profile).check();
+    const Profile& t_profile, const unsigned int& t_radius) {
+  t_profile.check();
 
-  const set<Location::Place> places =
-      Location::get_common_places(get_coords(t_profile, t_radius));
+  const set<Location::Place> places = Location::get_common_places(
+      get_coords(t_profile, t_radius));
   if (places.empty()) {
     return;
   }
@@ -230,7 +232,7 @@ void Data::show_location_info(
 }
 
 set<Location::Coord> Data::get_coords(
-    const string& t_profile, const unsigned int& t_radius) {
+    const Profile& t_profile, const unsigned int& t_radius) {
   using namespace filesystem;
 
   cout << "\rProcessing posts..." << flush;
@@ -239,36 +241,20 @@ set<Location::Coord> Data::get_coords(
     "GraphSidecar", "GraphImage"
   };
 
+  const set<json> posts = t_profile.get_posts();
   set<Location::Coord> coords;
-  const path& profile_path = Profile::get_profiles_path() / t_profile;
-  unsigned int posts = 0, pictures = 0, geotags = 0;
+  unsigned int pictures = 0, geotags = 0;
 
-  for (const auto& p : directory_iterator(profile_path)) {
-    if (p.is_directory() || p.path() == profile_path / "profile.json") {
+  for (const auto& p : posts) {
+    if (!Utils::has_json_node(p, {"node", "location"})) {
       continue;
     }
 
-    ++posts;
-    ifstream ifs(p.path());
-    stringstream ss_json;
-    ss_json << ifs.rdbuf();
-    json json_data;
-
-    try {
-      json_data = json::parse(ss_json.str());
-    } catch (const exception&) {
-      continue;
-    }
-
-    if (!Utils::has_json_node(json_data, {"node", "location"})) {
-      continue;
-    }
-
-    if (json_data["node"].find("__typename") != json_data["node"].end() &&
-        picture_types.count(json_data["node"]["__typename"]) != 0) {
+    if (p["node"].find("__typename") != p["node"].end() &&
+        picture_types.count(p["node"]["__typename"]) != 0) {
       ++pictures;
 
-      const auto& location = json_data["node"]["location"];
+      const auto& location = p["node"]["location"];
       if (location.find("lat") != location.end() &&
           location.find("lng") != location.end()) {
         coords.insert({location["lat"], location["lng"], t_radius});
@@ -281,13 +267,186 @@ set<Location::Coord> Data::get_coords(
   if (geotags == 0) {
     Instanalyzer::msg(Instanalyzer::MSG_WARN, "No pictures with location info!");
   } else {
-    cout << Term::process_colors("Processed #{yellow_out}" + to_string(posts) +
-        "#{reset} posts and #{yellow_out}" + to_string(geotags) +
-        "#{reset} of #{yellow_out}" + to_string(pictures) +
+    cout << Term::process_colors("Processed #{yellow_out}" +
+        to_string(posts.size()) + "#{reset} posts and #{yellow_out}" +
+        to_string(geotags) + "#{reset} of #{yellow_out}" + to_string(pictures) +
         "#{reset} pictures have location info.") << endl;
 
     cout << Term::process_colors("Common places count: #{yellow_out}" +
         to_string(coords.size()) + "#{reset}.") << endl;
   }
   return coords;
+}
+
+void Data::show_posts_top(const Profile& t_profile, const int t_count) {
+  t_profile.check();
+
+  cout << "\rProcessing posts..." << flush;
+  const set<json>& json_posts = t_profile.get_posts();
+  vector<Post> posts;
+
+  for (const auto& p : json_posts) {
+    if (!Utils::has_json_node(p, {"node", "shortcode"}) ||
+        !Utils::has_json_node(p, {"node", "edge_media_preview_like", "count"})) {
+      continue;
+    }
+
+    const string& shortcode = p["node"]["shortcode"];
+    if (!shortcode.empty()) {
+      Post post;
+      post.set_shortcode(shortcode);
+      post.set_likes(p["node"]["edge_media_preview_like"]["count"]);
+
+      if (Utils::has_json_node(p, {"node", "taken_at_timestamp"})) {
+        post.set_creation_time(p["node"]["taken_at_timestamp"]);
+      } else {
+        post.set_creation_time(0);
+      }
+      posts.push_back(post);
+    }
+  }
+
+  const auto& cmp = [&t_count] (const Post& lhs, const Post& rhs) {
+    return t_count < 0 ? (lhs.get_likes() < rhs.get_likes()) :
+        (lhs.get_likes() > rhs.get_likes());
+  };
+  sort(posts.begin(), posts.end(), cmp);
+
+  cout << Term::clear_line() << endl;
+  if (posts.empty()) {
+    Instanalyzer::msg(Instanalyzer::MSG_WARN, "No posts!");
+    return;
+  }
+
+  vector<Post>::const_iterator end_it;
+  if (t_count == 0) {
+    end_it = posts.cend();
+  } else {
+    if (static_cast<size_t>(abs(t_count)) > posts.size()) {
+      end_it = posts.cend();
+    } else {
+      end_it = posts.cbegin() + abs(t_count);
+    }
+  }
+
+  const time_t& time_zero = 0;
+  ostringstream time_zone;
+  time_zone << put_time(localtime(&time_zero), "%Z");
+
+  cout << Term::process_colors("#{bold}Top posts (#{gray_out}" +
+      time_zone.str() + "#{reset} time zone" + string(t_count < 0 ?
+      ", #{red_out}reverse#{reset}#{bold}" : "") + "):#{reset}") << endl;
+
+  for (auto p = posts.cbegin(); p != end_it; ++p) {
+    const string& item = "#{bold}" +
+        to_string((p - posts.cbegin()) + 1) + ".#{reset}";
+    const string& likes = "#{yellow_out}" + to_string(p->get_likes()) +
+        "#{reset} like" + (p->get_likes() == 1 ? "" : "s");
+
+    const time_t& creation_time = p->get_creation_time();
+    ostringstream date;
+    date << put_time(localtime(&creation_time), "%a %b %d %H:%M %Y");
+
+    cout << Term::process_colors("  " + item + "#{cream_out} instagram.com/p/" +
+        p->get_shortcode() + " #{reset}(" + likes + (creation_time == 0 ?
+        "" : ", " + date.str()) + ")#{reset}") << endl;
+  }
+}
+
+set<Profile::TaggedProfile> Data::get_tagged_profiles(const Profile& t_owner) {
+  const set<json>& posts = t_owner.get_posts();
+  set<Profile::TaggedProfile> tagged_profiles;
+
+  typedef void (*profile_setter) (Profile&, const json::value_type&);
+  const map<string, profile_setter>& setters = {
+    {"id", [] (Profile& prof, const json::value_type& val) {
+      prof.set_id(val);
+    }},
+    {"username", [] (Profile& prof, const json::value_type& val) {
+      prof.set_name(val);
+    }},
+    {"full_name", [] (Profile& prof, const json::value_type& val) {
+      prof.set_full_name(val);
+    }},
+    {"is_verified", [] (Profile& prof, const json::value_type& val) {
+      prof.set_verified(val);
+    }}
+  };
+
+  for (const auto& p : posts) {
+    if (!Utils::has_json_node(p, {"node", "shortcode"}) ||
+        !Utils::has_json_node(p, {"node", "edge_media_to_tagged_user", "edges"})) {
+      continue;
+    }
+
+    for (const auto& u : p["node"]["edge_media_to_tagged_user"]["edges"]) {
+      if (!Utils::has_json_node(u, {"node", "user"})) {
+        continue;
+      }
+
+      const auto& node = u["node"];
+      Profile profile;
+
+      for (const auto& s : setters) {
+        if (node["user"].find(s.first) != node["user"].end()) {
+          s.second(profile, node["user"][s.first]);
+        }
+      }
+
+      Profile::TaggedProfile tagged_profile(profile);
+      tagged_profile.post_shortcode = p["node"]["shortcode"];
+
+      if (node.find("x") != node.end() && node.find("y") != node.end()) {
+        tagged_profile.x = node["x"];
+        tagged_profile.y = node["y"];
+      }
+      tagged_profiles.insert(tagged_profile);
+    }
+  }
+  return tagged_profiles;
+}
+
+void Data::show_tagged_profiles(const Profile& t_owner) {
+  t_owner.check();
+
+  cout << "\n\rProcessing posts..." << flush;
+  const auto& tagged_profiles = get_tagged_profiles(t_owner);
+  map<Profile, unsigned int> tags_count;
+
+  for (const auto& p : tagged_profiles) {
+    if (p.profile->get_name().empty()) {
+      continue;
+    }
+    ++tags_count[*p.profile];
+  }
+
+  vector<pair<Profile, unsigned int>>
+      tags_count_sorted(tags_count.cbegin(), tags_count.cend());
+  const auto& cmp = [] (const pair<Profile, unsigned int>& lhs,
+      const pair<Profile, unsigned int>& rhs) {
+    return lhs.second > rhs.second;
+  };
+  sort(tags_count_sorted.begin(), tags_count_sorted.end(), cmp);
+
+  cout << Term::clear_line() << flush;
+  if (tags_count_sorted.empty()) {
+    Instanalyzer::msg(Instanalyzer::MSG_WARN, "No tagged profiles!");
+    return;
+  }
+
+  cout << Term::process_colors("#{bold}> Often tagged profiles:#{reset}") << endl;
+  const auto& graph_style = Graph::get_random_style();
+
+  for (const auto& p : tags_count_sorted) {
+    Graph graph;
+
+    graph.set_label('@' + p.first.get_name() + " (" + to_string(p.second) +
+        " time" + (p.second == 1 ? "" : "s") + ')');
+    graph.set_bold_text(p.first.get_name() == t_owner.get_name());
+    graph.set_colors(graph_style);
+    graph.set_percents((static_cast<double>(p.second) /
+        tagged_profiles.size()) * 100.0);
+
+    graph.draw(cout);
+  }
 }

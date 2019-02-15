@@ -19,13 +19,15 @@
 
 #include <fstream>
 #include <iostream>
-#include <set>
 
 #include "instanalyzer.hpp"
 #include "modules.hpp"
 #include "term.hpp"
 
+using namespace nlohmann;
 using namespace std;
+
+const unsigned int Profile::MAX_CACHED_POSTS = 10000;
 
 const vector<Profile::MsgUpd> Profile::m_msgs_upd = {
   {boost::regex("^\\s*\\[\\s*([^\\s\\/]+)\\s*\\/\\s*([^]\\s]+)\\s*].*$",
@@ -41,6 +43,8 @@ const vector<Profile::ErrUpd> Profile::m_errs_upd = {
   {boost::regex("^([^:]+): --login=USERNAME required.$", boost::regex::extended),
       "Profile #{red_out}@$1#{reset} is private!", true}
 };
+
+map<Profile, set<json>> Profile::m_cached_posts;
 
 void Profile::init() {
   using namespace filesystem;
@@ -173,4 +177,49 @@ void Profile::remove_unused_files() const {
   remove(profile_path / "id");
 
   cout << Term::clear_line() + "Unused files removed." << endl;
+}
+
+set<json> Profile::get_posts(const bool& t_use_cache) const {
+  using namespace filesystem;
+
+  if (t_use_cache) {
+    const auto& cached_posts = m_cached_posts[*this];
+    if (!cached_posts.empty()) {
+      return cached_posts;
+    }
+  }
+
+  const path& profile_path = get_profiles_path() / m_name;
+  if (!directory_entry(profile_path).exists()) {
+    return {};
+  }
+
+  const set<string> exclude_files = {
+    "profile.json"
+  };
+  set<json> posts;
+
+  for (const auto f : directory_iterator(profile_path)) {
+    if (f.is_directory() || exclude_files.count(f.path().filename()) != 0) {
+      continue;
+    }
+
+    ifstream ifs(f.path());
+    if (ifs.fail()) {
+      continue;
+    }
+    stringstream ss;
+    ss << ifs.rdbuf();
+
+    try {
+      posts.insert(json::parse(ss.str()));
+    } catch (const exception&) {
+      continue;
+    }
+  }
+
+  if (t_use_cache && posts.size() <= MAX_CACHED_POSTS) {
+    m_cached_posts[*this] = posts;
+  }
+  return posts;
 }

@@ -18,6 +18,7 @@
 #pragma once
 
 #include <ctime>
+#include <map>
 #include <set>
 #include <string>
 
@@ -29,7 +30,9 @@ class Comment {
 public:
   Comment() = default;
 
-  inline bool operator<(const Comment& rhs) const { return m_id < rhs.m_id; }
+  inline bool operator<(const Comment& rhs) const {
+    return m_creation_time < rhs.m_creation_time;
+  }
 
   inline std::string get_id() const { return m_id; }
   inline std::string get_text() const { return m_text; }
@@ -53,7 +56,15 @@ public:
   }
   inline void set_spam(const bool& t_is_spam) { m_is_spam = t_is_spam; }
 
-  static std::set<Comment> get_comments(const nlohmann::json&);
+  static std::set<Comment> get_comments(const std::set<nlohmann::json>&);
+
+  static void show_commentators(const Profile&);
+  static void show_commentator_info(
+      const Profile& owner, const std::string& commentator);
+  static void print_comments(const std::set<Comment>& comments,
+      const std::string& label = "");
+  static void show_references(const Profile& owner,
+      const std::string& commentator, std::set<Comment> comments = {});
 
 private:
   std::string m_id, m_text, m_post_shortcode;

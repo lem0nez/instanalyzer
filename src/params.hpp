@@ -31,6 +31,10 @@ private:
   enum Parameters {
     PARAM_PROFILE_INFO,
     PARAM_PROFILE_LOCATION,
+    PARAM_PROFILE_COMMENTATORS,
+    PARAM_COMMENTATOR_INFO,
+    PARAM_TOP_POSTS,
+    PARAM_TAGGED_PROFILES,
     PARAM_UPDATE_PROFILE,
     PARAM_GEOCODER,
     PARAM_THEME,
@@ -41,10 +45,11 @@ private:
 
   struct ParamInfo {
     std::vector<std::string> names;
-    // Additional value for parameter. May be is empty.
-    std::string val;
     std::string info;
     bool is_main_param;
+    bool allow_multiple = false;
+    // Additional value for parameter.
+    std::string val = "";
   };
 
   static const std::map<Parameters, ParamInfo> m_params;

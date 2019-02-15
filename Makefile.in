@@ -6,7 +6,8 @@ HERE_APPCODE = @HERE_APPCODE@
 YANDEX_API_KEY = @YANDEX_API_KEY@
 
 CXX = @echo '  g++    $@' && g++
-ARGS = -std=c++17 -lstdc++fs -ggdb -pthread
+ARGS = -DNDEBUG -O3 -std=c++17 -lstdc++fs -pthread
+ARGS_DEBUG = -ggdb -std=c++17 -lstdc++fs -pthread
 DEFINES = -DVERSION=\"$(VERSION)\" -DHERE_APPID=\"$(HERE_APPID)\" -DHERE_APPCODE=\"$(HERE_APPCODE)\" \
 	-DYANDEX_API_KEY=\"$(YANDEX_API_KEY)\"
 WARNINGS = -Wall -fexceptions -Wextra -Wno-psabi
@@ -18,9 +19,6 @@ LIB = lib
 
 PROJECT_PATH = $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 THREADS = 5
-
-test:
-	@echo $(MAKEFILE_PATH)
 
 SOURCES = $(wildcard $(SRC)/*.cpp)
 OBJECTS = $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SOURCES))
@@ -34,6 +32,18 @@ $(BUILD)/instanalyzer: $(OBJECTS)
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(WARNINGS) $(DEFINES) -c $< -o $@ $(CXXFLAGS) $(ARGS)
+
+.PHONY: debug
+debug: .debug-init $(BUILD)/instanalyzer
+.debug-init:
+	@echo 'Debug build'
+	$(eval ARGS = $(ARGS_DEBUG))
+
+.PHONY: install
+install:
+	@mv '$(BUILD)/instanalyzer' '/usr/bin'
+	@chmod 755 '/usr/bin/instanalyzer'
+	@chown root:root '/usr/bin/instanalyzer'
 
 .PHONY: clean
 clean:

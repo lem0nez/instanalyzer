@@ -44,6 +44,8 @@ public:
   inline void set_colors(const Colors& t_col) { m_col = t_col; }
   inline void set_bold_text(const bool& t_is_bold) { m_is_bold_text = t_is_bold; }
 
+  inline int draw(std::ostream& t_os) const { return draw_graphs(t_os, {*this}); }
+
   // Return -1 on successful, otherwise graph index
   // which didn't print due to terminal didn't have space (columns) for it.
   static int draw_graphs(std::ostream&, const std::vector<Graph>&);

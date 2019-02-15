@@ -153,7 +153,16 @@ set<Location::Place> Location::getter_here(
   if (response_code != 200) {
     cout << Term::clear_line() << flush;
 
-    const json& json_err = json::parse(ss_json.str());
+    json json_err;
+    try {
+      json_err = json::parse(ss_json.str());
+    } catch (const exception&) {
+      Instanalyzer::msg(Instanalyzer::MSG_ERR, Term::process_colors(
+          "Reverse geocoding failed. Response code: #{red_out}" +
+          to_string(response_code) + "#{reset}."));
+      exit(EXIT_FAILURE);
+    }
+
     const string& msg = "Reverse geocoding using " +
         m_geocoders.at(GEOCODER_HERE).name + "#{reset} failed:";
 

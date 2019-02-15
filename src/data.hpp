@@ -24,15 +24,24 @@
 #include "nlohmann/json.hpp"
 
 #include "location.hpp"
+#include "profile.hpp"
 #include "term.hpp"
 
 class Data {
 public:
   typedef std::string (*val_parser)(const nlohmann::json&);
 
-  static void show_profile_info(const std::string&);
-  static void show_location_info(const std::string& profile,
+  static void show_profile_info(const Profile&);
+  static void show_location_info(const Profile& profile,
       const unsigned int& radius = Location::get_default_radius());
+
+  inline static int get_default_posts_count() { return 10; }
+  // If "count" is negative number, then will be printed less liked posts.
+  static void show_posts_top(const Profile& profile,
+      const int count = get_default_posts_count());
+
+  static std::set<Profile::TaggedProfile> get_tagged_profiles(const Profile&);
+  static void show_tagged_profiles(const Profile&);
 
 private:
   struct LocationGroup {
@@ -40,7 +49,7 @@ private:
     std::vector<std::string*> address_tree;
   };
 
-  static std::set<Location::Coord> get_coords(const std::string& profile,
+  static std::set<Location::Coord> get_coords(const Profile& profile,
       const unsigned int& radius = Location::get_default_radius());
 
   static const std::vector<std::pair<std::string, val_parser>> m_profile_data;

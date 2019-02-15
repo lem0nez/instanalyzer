@@ -21,6 +21,7 @@
 #include <deque>
 #include <iostream>
 
+#include "comment.hpp"
 #include "data.hpp"
 #include "instanalyzer.hpp"
 #include "location.hpp"
@@ -31,17 +32,26 @@
 using namespace std;
 
 const map<Params::Parameters, Params::ParamInfo> Params::m_params = {
-  {PARAM_PROFILE_LOCATION, {{"-l", "--location"}, "",
+  {PARAM_PROFILE_LOCATION, {{"-l", "--location"},
       "Show info of most visited places.", true}},
-  {PARAM_PROFILE_INFO, {{"-i", "--info"}, "", "Show profile info.", true}},
+  {PARAM_PROFILE_COMMENTATORS, {{"-c", "--commentators"},
+      "Show most active commentators.", true}},
+  {PARAM_COMMENTATOR_INFO, {{"-o", "--commentator"},
+      "Show commentator info.", true, true, "name"}},
+  {PARAM_TOP_POSTS, {{"-p", "--top-posts"},
+      "Show top of most (or less with prefix \"r\") liked posts.",
+      true, false, "count"}},
+  {PARAM_TAGGED_PROFILES, {{"-t", "--tagged"},
+      "Show often tagged profiles.", true}},
+  {PARAM_PROFILE_INFO, {{"-i", "--info"}, "Show profile info.", true}},
   {PARAM_UPDATE_PROFILE,
-      {{"-u", "--update"}, "", "Force update local copy of profile.", true}},
-  {PARAM_GEOCODER, {{"-g", "--geocoder"}, "", "Change geocoder.", false}},
-  {PARAM_THEME, {{"-t", "--theme"}, "", "Change theme.", false}},
-  {PARAM_UPDATE, {{"-m", "--update-modules"}, "", "Force update modules.", false}},
-  {PARAM_VERSION, {{"-v", "--version"}, "",
-      "Show version of tools and exit.", false}},
-  {PARAM_HELP, {{"-h", "--help"}, "", "Show help and exit.", false}}
+      {{"-u", "--update"}, "Force update local copy of profile.", true}},
+  {PARAM_GEOCODER, {{"--geocoder", "-g"},
+      "Change geocoder (if available).", false}},
+  {PARAM_THEME, {{"--theme"}, "Change theme.", false}},
+  {PARAM_UPDATE, {{"--update-modules"}, "Force update modules.", false}},
+  {PARAM_VERSION, {{"--version"}, "Show version of tools and exit.", false}},
+  {PARAM_HELP, {{"--help", "-h"}, "Show help and exit.", false}}
 };
 
 void Params::process_params(const vector<string>& t_params) {
@@ -50,8 +60,22 @@ void Params::process_params(const vector<string>& t_params) {
     exit(EXIT_SUCCESS);
   }
 
+  // Get value which associated with parameter.
+  // Return empty string if value doesn't exist
+  const auto& get_val = [&t_params]
+      (const vector<string>::const_iterator& t_param_it) -> string {
+    const auto& val = t_param_it + 1;
+
+    if (val != t_params.cend() && val->substr(0, 1) != "-") {
+      return *val;
+    } else {
+      return "";
+    }
+  };
+
   bool request_profile = false;
   string profile;
+  set<Parameters> used_params;
   deque<function<void()>> funcs;
 
   for (auto p = t_params.cbegin(); p != t_params.cend(); ++p) {
@@ -65,14 +89,77 @@ void Params::process_params(const vector<string>& t_params) {
         is_found = true;
       }
 
+      if (!i.second.allow_multiple) {
+        if (used_params.count(i.first) != 0) {
+          continue;
+        } else {
+          used_params.insert(i.first);
+        }
+      }
+
       switch (i.first) {
         case PARAM_PROFILE_INFO:
           request_profile = true;
-          funcs.push_back([&profile] { Data::show_profile_info(profile); });
+          funcs.push_back([&profile] {
+            Data::show_profile_info(Profile(profile));
+          });
           continue;
         case PARAM_PROFILE_LOCATION:
           request_profile = true;
-          funcs.push_back([&profile] { Data::show_location_info(profile); });
+          funcs.push_back([&profile] {
+            Data::show_location_info(Profile(profile));
+          });
+          continue;
+        case PARAM_PROFILE_COMMENTATORS:
+          request_profile = true;
+          funcs.push_back([&profile] { Comment::show_commentators(profile); });
+          continue;
+        case PARAM_COMMENTATOR_INFO: {
+          request_profile = true;
+          const string& val = get_val(p);
+
+          if (val.empty()) {
+            Instanalyzer::msg(Instanalyzer::MSG_ERR, Term::process_colors(
+                "Need specify commentator name with parameter \"#{red_out}" +
+                *p + "#{reset}\"!"));
+            exit(EXIT_FAILURE);
+          }
+
+          funcs.push_back([&profile, val] {
+            Comment::show_commentator_info(profile, val);
+          });
+          ++p;
+          continue;
+        }
+        case PARAM_TOP_POSTS: {
+          request_profile = true;
+          const string& val = get_val(p);
+          int count = Data::get_default_posts_count();
+
+          if (!val.empty() && (p + 2) != t_params.cend()) {
+            try {
+              if (val.substr(0, 1) == "r") {
+                count = -stoi(val.substr(1));
+              } else {
+                count = stoi(val);
+              }
+            } catch (const exception&) {
+              Instanalyzer::msg(Instanalyzer::MSG_ERR, Term::process_colors(
+                  "Parameter \"" + *p + "\" receive the integer value "
+                  "(including prefix \"r\")!"));
+              exit(EXIT_FAILURE);
+            }
+            ++p;
+          }
+
+          funcs.push_back([&profile, count] {
+            Data::show_posts_top(profile, count);
+          });
+          continue;
+        }
+        case PARAM_TAGGED_PROFILES:
+          request_profile = true;
+          funcs.push_back([&profile] { Data::show_tagged_profiles(profile); });
           continue;
         case PARAM_UPDATE_PROFILE:
           request_profile = true;
