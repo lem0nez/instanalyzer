@@ -58,7 +58,7 @@ const vector<Modules::ZipModuleInfo> Modules::m_zip_modules = {
   {
     "requests-2.21.0",
     "https://api.github.com/repos/requests/requests/zipball/v2.21.0",
-    {"requests-requests-5a1e738/requests"}
+    {"kennethreitz-requests-5a1e738/requests"}
   },
   {
     "urllib3-1.24.1",
