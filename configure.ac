@@ -1,8 +1,8 @@
-AC_INIT(instanalyzer, 1.0.1, nikita.dudko.95@gmail.com)
+AC_INIT(instanalyzer, 1.0.2, nikita.dudko.95@gmail.com)
 AC_LANG(C++)
 AC_PROG_CXX
 
-AC_SUBST(VERSION, 1.0.1)
+AC_SUBST(VERSION, 1.0.2)
 AC_SUBST(HERE_APPID, $HERE_APPID)
 AC_SUBST(HERE_APPCODE, $HERE_APPCODE)
 AC_SUBST(YANDEX_API_KEY, $YANDEX_API_KEY)

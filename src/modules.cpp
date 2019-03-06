@@ -79,7 +79,7 @@ void Modules::init_interpreter() {
   const vector<string> path_variables = {
     "PATH"
   };
-  const boost::regex python_ver("^Python 3\\.[5-9]\\.[0-9]+$");
+  const boost::regex python_ver("^Python 3\\.[5-9].*$");
 
   vector<filesystem::path> paths = {
     "/bin", "/usr/bin", "/usr/local/bin", "/sbin", "/opt"
