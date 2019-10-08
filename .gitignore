@@ -37,6 +37,9 @@ build/
 lib/
 *.log
 *.swp
+.clang-tidy
 .session.vim
+.vimrc
+compile_flags.txt
 config.status
 Makefile
