@@ -116,7 +116,8 @@ void Profile::update() const {
 
   static const unsigned int MAX_CONNECTION_ATTEMPTS = 10;
   Modules::instaloader(
-      "-V -C -G --no-pictures --no-profile-pic --no-captions --no-compress-json "
+      // TODO: make ability to login.
+      "-V -C" /* -G */ " --no-pictures --no-profile-pic --no-captions --no-compress-json "
       "--max-connection-attempts=" + to_string(MAX_CONNECTION_ATTEMPTS) +
       " --filename-pattern={shortcode} --dirname-pattern=" +
       string(get_profiles_path()) + "/{target} " + m_name, fout, ferr);

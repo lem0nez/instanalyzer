@@ -33,9 +33,9 @@ using namespace std;
 
 const vector<Modules::ZipModuleInfo> Modules::m_zip_modules = {
   {
-    "certifi-2018.11.29",
-    "https://api.github.com/repos/certifi/python-certifi/zipball/2018.11.29",
-    {"certifi-python-certifi-10a1f8a/certifi"}
+    "certifi-2019.03.09",
+    "https://api.github.com/repos/certifi/python-certifi/zipball/2019.03.09",
+    {"certifi-python-certifi-401100f/certifi"}
   },
   {
     "chardet-3.0.4",
@@ -48,22 +48,22 @@ const vector<Modules::ZipModuleInfo> Modules::m_zip_modules = {
     {"kjd-idna-375dc46/idna"}
   },
   {
-    "instaloader-4.2.1",
-    "https://api.github.com/repos/instaloader/instaloader/zipball/v4.2.1",
+    "instaloader-4.2.9",
+    "https://api.github.com/repos/instaloader/instaloader/zipball/v4.2.9",
     {
-      "instaloader-instaloader-213b78c/instaloader",
-      "instaloader-instaloader-213b78c/instaloader.py"
+      "instaloader-instaloader-3aa108c/instaloader",
+      "instaloader-instaloader-3aa108c/instaloader.py"
     }
   },
   {
-    "requests-2.21.0",
-    "https://api.github.com/repos/requests/requests/zipball/v2.21.0",
-    {"kennethreitz-requests-5a1e738/requests"}
+    "requests-2.22.0",
+    "https://api.github.com/repos/requests/requests/zipball/v2.22.0",
+    {"psf-requests-aeda65b/requests"}
   },
   {
-    "urllib3-1.24.1",
-    "https://api.github.com/repos/urllib3/urllib3/zipball/1.24.1",
-    {"urllib3-urllib3-2cc8363/src/urllib3"}
+    "urllib3-1.25.3",
+    "https://api.github.com/repos/urllib3/urllib3/zipball/1.25.3",
+    {"urllib3-urllib3-10f362e/src/urllib3"}
   }
 };
 
